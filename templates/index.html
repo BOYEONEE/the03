@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>오늘의 할 일</title>
+    <style>
+        :root {
+            --ink: #3a2a1d;
+            --cream: #fffaf1;
+            --gold: #d8b26e;
+            --line: rgba(58, 42, 29, .12);
+            --muted: #8b7b6b;
+            --green: #607b56
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font: 15px/1.7 "Malgun Gothic", sans-serif;
+            background: #171008
+        }
+
+        .backdrop {
+            position: fixed;
+            inset: 0;
+            background:linear-gradient(180deg, rgba(24, 16, 8, .18), rgba(24, 16, 8, .72)),
+            url("{{ url_for('static', filename='dog_photo.png') }}") center 38%/cover no-repeat
+        }
+
+        main {
+            position: relative;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px
+        }
+
+        .app {
+            width: min(680px, 100%);
+            max-height: calc(100vh - 48px);
+            overflow: hidden;
+            border: 1px solid rgba(255, 245, 224, .38);
+            border-radius: 18px;
+            background: rgba(255, 250, 241, .94);
+            box-shadow: 0 24px 70px rgba(12, 8, 4, .38);
+            backdrop-filter: blur(14px)
+        }
+
+        header {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px 26px 18px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        .date {
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        h1 {
+            margin: 4px 0 0;
+            font-family: Georgia, "Malgun Gothic", serif;
+            font-size: 32px
+        }
+
+        .progress {
+            min-width: 74px;
+            text-align: right;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .progress strong {
+            display: block;
+            color: var(--ink);
+            font-size: 22px
+        }
+
+        .composer {
+            display: flex;
+            gap: 10px;
+            padding: 18px 26px
+        }
+
+        .composer input {
+            min-width: 0;
+            flex: 1;
+            height: 46px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .82);
+            color: var(--ink);
+            padding: 0 14px;
+            font: inherit;
+            outline: none
+        }
+
+        .composer input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(216, 178, 110, .16)
+        }
+
+        .add {
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 8px;
+            background: var(--ink);
+            color: white;
+            cursor: pointer;
+            font-size: 24px
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 0 26px 10px
+        }
+
+        .filters {
+            display: flex;
+            gap: 4px
+        }
+
+        .filter {
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            padding: 7px 9px;
+            text-decoration: none
+        }
+
+        .filter.active {
+            background: var(--ink);
+            color: white
+        }
+
+        .clear {
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 7px 0
+        }
+
+        .tasks {
+            max-height: calc(100vh - 260px);
+            overflow-y: auto;
+            margin: 0;
+            padding: 0 26px 20px;
+            list-style: none
+        }
+
+        .task {
+            display: grid;
+            grid-template-columns: 24px minmax(0, 1fr) 32px;
+            align-items: center;
+            gap: 10px;
+            min-height: 58px;
+            border-top: 1px solid var(--line)
+        }
+
+        .task:first-child {
+            border-top: 0
+        }
+
+        .check {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            accent-color: var(--green)
+        }
+
+        .text {
+            overflow-wrap: anywhere
+        }
+
+        .completed .text {
+            color: #9b927f;
+            text-decoration: line-through
+        }
+
+        .delete {
+            width: 32px;
+            height: 32px;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 18px
+        }
+
+        .empty {
+            padding: 30px 0 12px;
+            color: var(--muted);
+            text-align: center;
+            border-top: 1px solid var(--line)
+        }
+
+        @media(max-width:600px) {
+            main {
+                padding: 12px;
+                align-items: end
+            }
+
+            .app {
+                max-height: calc(100vh - 24px)
+            }
+
+            header {
+                padding: 20px 18px 14px
+            }
+
+            h1 {
+                font-size: 27px
+            }
+
+            .composer {
+                padding: 14px 18px
+            }
+
+            .toolbar {
+                padding: 0 18px 8px
+            }
+
+            .tasks {
+                padding: 0 18px 14px;
+                max-height: calc(100vh - 240px)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="backdrop" aria-hidden="true"></div>
+    <main>
+        <section class="app" aria-label="할 일 목록">
+            <header>
+                <div>
+                    <div class="date">오늘</div>
+                    <h1>오늘의 할 일</h1>
+                </div>
+                <div class="progress"><strong>{{ remaining }}</strong>개 남음</div>
+            </header>
+
+            <form class="composer" action="{{ url_for('add_task') }}?filter={{ filter_name }}" method="post">
+                <input name="text" maxlength="120" placeholder="할 일을 입력하세요" aria-label="할 일" autocomplete="off">
+                <button class="add" type="submit" aria-label="할 일 추가">+</button>
+            </form>
+
+            <div class="toolbar">
+                <nav class="filters" aria-label="할 일 필터">
+                    <a class="filter {{ 'active' if filter_name == 'all' }}"
+                        href="{{ url_for('index', filter='all') }}">전체</a>
+                    <a class="filter {{ 'active' if filter_name == 'active' }}"
+                        href="{{ url_for('index', filter='active') }}">진행중</a>
+                    <a class="filter {{ 'active' if filter_name == 'completed' }}"
+                        href="{{ url_for('index', filter='completed') }}">완료</a>
+                </nav>
+                <form action="{{ url_for('clear_completed') }}?filter={{ filter_name }}" method="post">
+                    <button class="clear" type="submit">완료 항목 삭제</button>
+                </form>
+            </div>
+
+            <ul class="tasks">
+                {% for task in tasks %}
+                <li class="task {{ 'completed' if task.completed }}">
+                    <form action="{{ url_for('toggle_task', task_id=task.id) }}?filter={{ filter_name }}" method="post">
+                        <input class="check" type="checkbox" aria-label="완료 상태" {% if task.completed %}checked{% endif
+                            %} onchange="this.form.submit()">
+                    </form>
+                    <span class="text">{{ task.text }}</span>
+                    <form action="{{ url_for('delete_task', task_id=task.id) }}?filter={{ filter_name }}" method="post">
+                        <button class="delete" type="submit" aria-label="삭제">×</button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="empty">{% if filter_name == 'completed' %}완료한 할 일이 없습니다.{% elif filter_name == 'active'
+                    %}진행중인 할 일이 없습니다.{% else %}첫 번째 할 일을 추가하세요.{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </main>
+</body>
+
+</html>
